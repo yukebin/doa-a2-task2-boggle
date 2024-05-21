@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <error.h>
+#include <errno.h>
 #include "problem.h"
 
 #define DICT_FILE_ARG 1
