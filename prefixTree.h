@@ -16,7 +16,8 @@ struct prefixTree;
 struct prefixTree;
 
 struct prefixTree {
-    /* FILL IN: IMPLEMENT */
+    int isEndOfWord;
+    struct prefixTree *children[CHILD_COUNT];
 };
 
 #endif

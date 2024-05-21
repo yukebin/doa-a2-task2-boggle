@@ -13,15 +13,26 @@
 #include <string.h>
 
 struct prefixTree *newPrefixTree(){
-    /* IMPLEMENT HERE */
-    /* Structure of the prefix tree includes a dummy node. */
-    struct prefixTree *retTree = NULL;
+    struct prefixTree *retTree = (struct prefixTree *)malloc(sizeof(struct prefixTree));;
+    retTree->isEndOfWord = UNMARKED;
+
+    for(int i = 0; i < CHILD_COUNT; i++){
+        retTree->children[i] = NULL;
+    }
 
     return retTree;
 }
 
 struct prefixTree *addWordToTree(struct prefixTree *pt, char *word){
-    /* FILL IN: IMPLEMENT */
+    struct prefixTree *curr = pt;
+
+    for(int i = 0; i < strlen(word); i++){
+        if(curr->children[word[i]] == NULL){
+            curr->children[word[i]] = newPrefixTree();
+        }
+        curr = curr->children[word[i]];
+    }
+    curr->isEndOfWord = MARKED;
 
     return pt;
 }
