@@ -23,6 +23,9 @@
 /* Number of words to allocate space for initially. */
 #define INITIALWORDSALLOCATION 64
 
+/* Maximum length of a word. */
+#define MAXWORDLENGTH 256
+
 /* Denotes that the dimension has not yet been set. */
 #define DIMENSION_UNSET (-1)
 
@@ -320,12 +323,90 @@ struct solution *newSolution(struct problem *problem){
 }
 
 /*
+    DFS function to traverse the prefix tree and find words on the board.
+    (x, y) is the current position on the board.
+    word is the current word being built.
+    visited is a 2D array to keep track of which positions have been visited.
+*/
+void dfs(struct problem *p, struct prefixTree *node, struct solution *s, int x, int y, char *word, int visited[p->dimension][p->dimension]) {
+    /* Mark the current position as visited. */
+    visited[x][y] = 1;
+
+    /* Add the current character to the word. */ 
+    char c = tolower(p->board[x][y]);
+    int len = strlen(word);
+    word[len] = c;
+    word[len + 1] = '\0';
+
+    /* If the current node in the prefix tree represents the end of a word, add the word to the solution. */
+    if (node->isEndOfWord) {
+        /* Add word to the solution. */
+        s->foundWordCount++;
+        s->words = (char **) realloc(s->words, sizeof(char *) * s->foundWordCount);
+        s->words[s->foundWordCount - 1] = strdup(word); //strdup is equivalent to malloc then strcpy
+    }
+
+    /* Explore all children of the current node in the prefix tree. */
+    for (int i = 0; i < CHILD_COUNT; i++) {
+        /* If the character edge exists... */
+        if (node->children[i]) {
+            /* Find the next character on the board that is adjacent to the current position. */
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dy = -1; dy <= 1; dy++) {
+                    int nx = x + dx, ny = y + dy;
+                    /* If the next position is within the board, not visited, and matches 
+                        the next letter in the prefix tree, continue the DFS from there. */
+                    if (nx >= 0 && nx < p->dimension && ny >= 0 && ny < p->dimension 
+                        && !visited[nx][ny] && tolower(p->board[nx][ny]) == i + 'a') {
+                        dfs(p, node->children[i], s, nx, ny, word, visited);
+                    }
+                }
+            }
+        }
+    }
+    /* Backtracking, removing the current character and unmark as visited. */ 
+    word[len] = '\0';
+    visited[x][y] = 0;
+}
+
+/*
     Solves the given problem according to Part A's definition
     and places the solution output into a returned solution value.
+
+    Method:
+    1. Traverse the prefix tree using Depth-First Search (DFS).
+    2. For each new word search (starting from the tree root), locate the 
+       corresponding character on the board.
+    3. Continue traversing the tree. If the next character in the tree is not 
+       adjacent to the last found character on the board, initiate a new search.
+    4. During traversal, if a character node with isEndOfWord marked is 
+       encountered, add the current word to the solution set.
 */
 struct solution *solveProblemA(struct problem *p){
     struct solution *s = newSolution(p);
-    /* Fill in: Part A */
+    struct prefixTree *pt = newPrefixTree();
+    addWordsToTree(pt, p->words, p->wordCount);
+
+    /* Initialise the word and visited array to be used in DFS. */
+    char word[MAXWORDLENGTH + 1] = "";
+    int visited[p->dimension][p->dimension];
+    memset(visited, 0, sizeof(visited)); // Set all values to 0
+
+    /* Start the DFS from each character (root edges) in the prefix tree that exists on the board */
+    for (int i = 0; i < CHILD_COUNT; i++) {
+        /* If it is a valid edge (character exists) in the prefix tree... */
+        if (pt->children[i]) {
+            /* Find the character on the board. */
+            for (int x = 0; x < p->dimension; x++) {
+                for (int y = 0; y < p->dimension; y++) {
+                    /* If the character on the board matches the character in the prefix tree, perform DFS */
+                    if (tolower(p->board[x][y]) == i + 'a') {
+                        dfs(p, pt->children[i], s, x, y, word, visited);
+                    }
+                }
+            }
+        }
+    }
 
     return s;
 }
