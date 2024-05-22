@@ -322,13 +322,29 @@ struct solution *newSolution(struct problem *problem){
     return s;
 }
 
+/* 
+    Compare two words, first by alphabetical order, then by length 
+*/
+int cmpWords(const void *a, const void *b) {
+    char *word1 = *(char **)a;
+    char *word2 = *(char **)b;
+
+    int cmp = strcmp(word1, word2);
+    if (cmp != 0) {
+        return cmp; // If words are not the same, sort them alphabetically
+    } else {
+        return strlen(word1) - strlen(word2); // If words are the same, sort them by length
+    }
+}
+
 /*
     DFS function to traverse the prefix tree and find words on the board.
     (x, y) is the current position on the board.
     word is the current word being built.
     visited is a 2D array to keep track of which positions have been visited.
 */
-void dfs(struct problem *p, struct prefixTree *node, struct solution *s, int x, int y, char *word, int visited[p->dimension][p->dimension]) {
+void dfs(struct problem *p, struct prefixTree *node, struct solution *s, 
+            int x, int y, char *word, int visited[p->dimension][p->dimension]) {
     /* Mark the current position as visited. */
     visited[x][y] = 1;
 
@@ -340,10 +356,21 @@ void dfs(struct problem *p, struct prefixTree *node, struct solution *s, int x, 
 
     /* If the current node in the prefix tree represents the end of a word, add the word to the solution. */
     if (node->isEndOfWord) {
-        /* Add word to the solution. */
-        s->foundWordCount++;
-        s->words = (char **) realloc(s->words, sizeof(char *) * s->foundWordCount);
-        s->words[s->foundWordCount - 1] = strdup(word); //strdup is equivalent to malloc then strcpy
+        /* Check if the word is already in the solution. */
+        int isDuplicate = 0;
+        for (int i = 0; i < s->foundWordCount; i++) {
+            if (strcmp(s->words[i], word) == 0) {
+                isDuplicate = 1;
+                break;
+            }
+        }
+
+        /* If the word is not a duplicate, add it to the solution. */
+        if (!isDuplicate) {
+            s->foundWordCount++;
+            s->words = (char **) realloc(s->words, sizeof(char *) * s->foundWordCount);
+            s->words[s->foundWordCount - 1] = strdup(word); //strdup is equivalent to malloc then strcpy
+        }
     }
 
     /* Explore all children of the current node in the prefix tree. */
@@ -357,7 +384,7 @@ void dfs(struct problem *p, struct prefixTree *node, struct solution *s, int x, 
                     /* If the next position is within the board, not visited, and matches 
                         the next letter in the prefix tree, continue the DFS from there. */
                     if (nx >= 0 && nx < p->dimension && ny >= 0 && ny < p->dimension 
-                        && !visited[nx][ny] && tolower(p->board[nx][ny]) == i + 'a') {
+                        && !visited[nx][ny] && tolower(p->board[nx][ny]) == i) {
                         dfs(p, node->children[i], s, nx, ny, word, visited);
                     }
                 }
@@ -400,13 +427,16 @@ struct solution *solveProblemA(struct problem *p){
             for (int x = 0; x < p->dimension; x++) {
                 for (int y = 0; y < p->dimension; y++) {
                     /* If the character on the board matches the character in the prefix tree, perform DFS */
-                    if (tolower(p->board[x][y]) == i + 'a') {
+                    if (tolower(p->board[x][y]) == i) {
                         dfs(p, pt->children[i], s, x, y, word, visited);
                     }
                 }
             }
         }
     }
+
+    /* Sort the words in the solution alphabetically and by length. */
+    qsort(s->words, s->foundWordCount, sizeof(char *), cmpWords);
 
     return s;
 }
