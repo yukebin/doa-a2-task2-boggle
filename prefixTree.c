@@ -37,3 +37,10 @@ struct prefixTree *addWordToTree(struct prefixTree *pt, char *word){
     return pt;
 }
 
+struct prefixTree *addWordsToTree(struct prefixTree *pt, char **words, int wordCount){
+    for(int i = 0; i < wordCount; i++){
+        pt = addWordToTree(pt, words[i]);
+    }
+
+    return pt;
+}

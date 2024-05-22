@@ -26,3 +26,4 @@ struct prefixTree *newPrefixTree();
 
 struct prefixTree *addWordToTree(struct prefixTree *pt, char *word);
 
+struct prefixTree *addWordsToTree(struct prefixTree *pt, char **words, int wordCount);
