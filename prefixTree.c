@@ -26,11 +26,12 @@ struct prefixTree *newPrefixTree(){
 struct prefixTree *addWordToTree(struct prefixTree *pt, char *word){
     struct prefixTree *curr = pt;
 
-    for(int i = 0; i < strlen(word); i++){
-        if(curr->children[word[i]] == NULL){
-            curr->children[word[i]] = newPrefixTree();
+    for(unsigned int i = 0; i < strlen(word); i++){
+        unsigned char c = (unsigned char) word[i];
+        if(curr->children[c] == NULL){
+            curr->children[c] = newPrefixTree();
         }
-        curr = curr->children[word[i]];
+        curr = curr->children[c];
     }
     curr->isEndOfWord = MARKED;
 
