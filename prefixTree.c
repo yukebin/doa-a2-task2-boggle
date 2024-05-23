@@ -66,7 +66,7 @@ struct prefixTree *addUniquesToTree(struct prefixTree *pt, char **words, int wor
         }
 
         if(isUnique){
-            pt = addWordsToTree(pt, words, wordCount);
+            pt = addWordToTree(pt, words[i]);
         }
 
         isUnique = 1;
