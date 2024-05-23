@@ -330,7 +330,7 @@ int cmpWords(const void *a, const void *b) {
     char *word2 = *(char **)b;
 
     int cmp = strcmp(word1, word2);
-    if (cmp != 0) {
+    if(cmp != 0){
         return cmp; // If words are not the same, sort them alphabetically
     } else {
         return strlen(word1) - strlen(word2); // If words are the same, sort them by length
@@ -355,42 +355,41 @@ void dfs(struct problem *p, struct prefixTree *node, struct solution *s,
     word[len + 1] = '\0';
 
     /* If the current node in the prefix tree represents the end of a word, add the word to the solution. */
-    if (node->isEndOfWord) {
+    if(node->isEndOfWord){
         /* Check if the word is already in the solution. */
         int isDuplicate = 0;
-        for (int i = 0; i < s->foundWordCount; i++) {
-            if (strcmp(s->words[i], word) == 0) {
+        for(int i = 0; i < s->foundWordCount; i++){
+            if(strcmp(s->words[i], word) == 0){
                 isDuplicate = 1;
                 break;
             }
         }
 
         /* If the word is not a duplicate, add it to the solution. */
-        if (!isDuplicate) {
+        if(!isDuplicate){
             s->foundWordCount++;
             s->words = (char **) realloc(s->words, sizeof(char *) * s->foundWordCount);
             s->words[s->foundWordCount - 1] = strdup(word); //strdup is equivalent to malloc then strcpy
         }
     }
 
-    /* Explore all children of the current node in the prefix tree. */
-    for (int i = 0; i < CHILD_COUNT; i++) {
-        /* If the character edge exists... */
-        if (node->children[i]) {
-            /* Find the next character on the board that is adjacent to the current position. */
-            for (int dx = -1; dx <= 1; dx++) {
-                for (int dy = -1; dy <= 1; dy++) {
-                    int nx = x + dx, ny = y + dy;
-                    /* If the next position is within the board, not visited, and matches 
-                        the next letter in the prefix tree, continue the DFS from there. */
-                    if (nx >= 0 && nx < p->dimension && ny >= 0 && ny < p->dimension 
-                        && !visited[nx][ny] && tolower(p->board[nx][ny]) == i) {
-                        dfs(p, node->children[i], s, nx, ny, word, visited);
-                    }
+    
+    /* Find the next character on the board that is adjacent to the current position. */
+    for(int dx = -1; dx <= 1; dx++){
+        for(int dy = -1; dy <= 1; dy++){
+            int nx = x + dx, ny = y + dy;
+            /* If the next position is within the board and not visited... */
+            if(nx >= 0 && nx < p->dimension && ny >= 0 && ny < p->dimension 
+                && !visited[nx][ny]){
+                char nextChar = tolower(p->board[nx][ny]);
+                /* If the next character matches a child in the prefix tree, continue the DFS from there. */
+                if(node->children[nextChar]){
+                    dfs(p, node->children[nextChar], s, nx, ny, word, visited);
                 }
             }
         }
     }
+
     /* Backtracking, removing the current character and unmark as visited. */ 
     word[len] = '\0';
     visited[x][y] = 0;
@@ -399,15 +398,6 @@ void dfs(struct problem *p, struct prefixTree *node, struct solution *s,
 /*
     Solves the given problem according to Part A's definition
     and places the solution output into a returned solution value.
-
-    Method:
-    1. Traverse the prefix tree using Depth-First Search (DFS).
-    2. For each new word search (starting from the tree root), locate the 
-       corresponding character on the board.
-    3. Continue traversing the tree. If the next character in the tree is not 
-       adjacent to the last found character on the board, initiate a new search.
-    4. During traversal, if a character node with isEndOfWord marked is 
-       encountered, add the current word to the solution set.
 */
 struct solution *solveProblemA(struct problem *p){
     struct solution *s = newSolution(p);
@@ -420,14 +410,14 @@ struct solution *solveProblemA(struct problem *p){
     memset(visited, 0, sizeof(visited)); // Set all values to 0
 
     /* Start the DFS from each character (root edges) in the prefix tree that exists on the board */
-    for (int i = 0; i < CHILD_COUNT; i++) {
+    for(int i = 0; i < CHILD_COUNT; i++){
         /* If it is a valid edge (character exists) in the prefix tree... */
-        if (pt->children[i]) {
+        if(pt->children[i]){
             /* Find the character on the board. */
-            for (int x = 0; x < p->dimension; x++) {
-                for (int y = 0; y < p->dimension; y++) {
+            for(int x = 0; x < p->dimension; x++){
+                for(int y = 0; y < p->dimension; y++){
                     /* If the character on the board matches the character in the prefix tree, perform DFS */
-                    if (tolower(p->board[x][y]) == i) {
+                    if(tolower(p->board[x][y]) == i){
                         dfs(p, pt->children[i], s, x, y, word, visited);
                     }
                 }
@@ -443,7 +433,31 @@ struct solution *solveProblemA(struct problem *p){
 
 struct solution *solveProblemB(struct problem *p){
     struct solution *s = newSolution(p);
-    /* Fill in: Part B */
+    struct prefixTree *pt = newPrefixTree();
+
+    s = solveProblemA(p);
+    addWordsToTree(pt, s->words, s->foundWordCount);
+
+    // traverse the prefix tree till the end of the partial string
+    for(unsigned int i = 0; i < strlen(p->partialString); i++){
+        unsigned char c = (unsigned char) tolower(p->partialString[i]);
+        pt = pt->children[c];
+    }
+
+    // If the word can be terminated, add a space to the followLetters.
+    if(pt->isEndOfWord){
+        s->foundLetterCount++;
+        s->followLetters = (char *) realloc(s->followLetters, sizeof(char) * (s->foundLetterCount));
+        s->followLetters[s->foundLetterCount - 1] = ' ';
+    }
+    // Add all the characters that can follow the partial string
+    for(int j = 0; j < CHILD_COUNT; j++){
+        if (pt->children[j]) {
+            s->foundLetterCount++;
+            s->followLetters = (char *) realloc(s->followLetters, sizeof(char) * (s->foundLetterCount));
+            s->followLetters[s->foundLetterCount - 1] = j;
+        }
+    }
 
     return s;
 }

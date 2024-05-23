@@ -45,3 +45,32 @@ struct prefixTree *addWordsToTree(struct prefixTree *pt, char **words, int wordC
 
     return pt;
 }
+
+/*
+    Used in Part D to add words to the tree only if they are unique.
+    i.e. does not contain any repeated characters.
+*/
+struct prefixTree *addUniquesToTree(struct prefixTree *pt, char **words, int wordCount){
+    int isCharPresent[CHILD_COUNT] = {0}; // mask to check if a character is present in a word
+    int isUnique = 1;
+
+    for(int i = 0; i < wordCount; i++){
+        for(unsigned int j = 0; j < strlen(words[i]); j++){
+            unsigned char c = (unsigned char) words[i][j];
+            if(isCharPresent[c] == 0){
+                isCharPresent[c] = 1;
+            } else {
+                isUnique = 0;
+                break;
+            }
+        }
+
+        if(isUnique){
+            pt = addWordsToTree(pt, words, wordCount);
+        }
+
+        isUnique = 1;
+    }
+
+    return pt;
+}
