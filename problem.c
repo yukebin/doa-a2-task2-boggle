@@ -435,22 +435,24 @@ struct solution *solveProblemB(struct problem *p){
     struct solution *s = newSolution(p);
     struct prefixTree *pt = newPrefixTree();
 
+    /* Add all the solution words in the dictionary a new prefix tree. */
     s = solveProblemA(p);
     addWordsToTree(pt, s->words, s->foundWordCount);
 
-    // traverse the prefix tree till the end of the partial string
+    /* Traverse the solution prefix tree till the end of the partial string */
     for(unsigned int i = 0; i < strlen(p->partialString); i++){
         unsigned char c = (unsigned char) tolower(p->partialString[i]);
         pt = pt->children[c];
     }
 
-    // If the word can be terminated, add a space to the followLetters.
+    /* If the word can be terminated, add a space to the followLetters. */
     if(pt->isEndOfWord){
         s->foundLetterCount++;
         s->followLetters = (char *) realloc(s->followLetters, sizeof(char) * (s->foundLetterCount));
         s->followLetters[s->foundLetterCount - 1] = ' ';
     }
-    // Add all the characters that can follow the partial string
+
+    /* Add all the characters that can follow the partial string */
     for(int j = 0; j < CHILD_COUNT; j++){
         if (pt->children[j]) {
             s->foundLetterCount++;
@@ -462,9 +464,99 @@ struct solution *solveProblemB(struct problem *p){
     return s;
 }
 
+/*
+    Modified DFS function from Part A for Part D.
+*/
+void dfsD(struct problem *p, struct prefixTree *node, struct solution *s, int x, int y, 
+            char *word, int visited[p->dimension][p->dimension], int seenChars[CHILD_COUNT]) {
+    /* Mark the current position as visited. */
+    visited[x][y] = 1;
+
+    /* Add the current character to the word. */ 
+    char c = tolower(p->board[x][y]);
+    int len = strlen(word);
+    word[len] = c;
+    word[len + 1] = '\0';
+    seenChars[(unsigned char) c] = 1;
+
+    /* If the current node in the prefix tree represents the end of a word, add the word to the solution. */
+    if(node->isEndOfWord){
+        /* Check if the word is already in the solution. */
+        int isDuplicate = 0;
+        for(int i = 0; i < s->foundWordCount; i++){
+            if(strcmp(s->words[i], word) == 0){
+                isDuplicate = 1;
+                break;
+            }
+        }
+
+        /* If the word is not a duplicate, add it to the solution. */
+        if(!isDuplicate){
+            s->foundWordCount++;
+            s->words = (char **) realloc(s->words, sizeof(char *) * s->foundWordCount);
+            s->words[s->foundWordCount - 1] = strdup(word); //strdup is equivalent to malloc then strcpy
+        }
+    }
+
+    
+    /* Find the next character on the board that is adjacent to the current position. */
+    for(int dx = -1; dx <= 1; dx++){
+        for(int dy = -1; dy <= 1; dy++){
+            int nx = x + dx, ny = y + dy;
+            /* If the next position is within the board and not visited... */
+            if(nx >= 0 && nx < p->dimension && ny >= 0 && ny < p->dimension 
+                && !visited[nx][ny]){
+                unsigned char nextChar = (unsigned char) tolower(p->board[nx][ny]);
+                if (seenChars[nextChar]){
+                    continue;
+                }
+                /* If the next character matches a child in the prefix tree, continue the DFS from there. */
+                if(node->children[nextChar]){
+                    dfsD(p, node->children[nextChar], s, nx, ny, word, visited, seenChars);
+                }
+            }
+        }
+    }
+
+    /* Backtracking, removing the current character and unmark as visited. */ 
+    word[len] = '\0';
+    visited[x][y] = 0;
+    seenChars[(unsigned char) c] = 0;
+}
+
 struct solution *solveProblemD(struct problem *p){
-        struct solution *s = newSolution(p);
-    /* Fill in: Part D */
+    struct solution *s = newSolution(p);
+    struct prefixTree *pt = newPrefixTree();
+    
+    /* Only add words to the prefix tree if they do not contain any repeated characters. */
+    addUniquesToTree(pt, p->words, p->wordCount);
+
+    /* Initialise the word, visited array to be used in DFS. */
+    char word[MAXWORDLENGTH + 1] = "";
+    int visited[p->dimension][p->dimension];
+    memset(visited, 0, sizeof(visited)); // Set all values to 0
+
+    /* Array to keep track of which characters have been seen in the board. */
+    int seenChars[CHILD_COUNT] = {0};
+
+    /* Start the DFS from each character (root edges) in the prefix tree that exists on the board */
+    for(int i = 0; i < CHILD_COUNT; i++){
+        /* If it is a valid edge (character exists) in the prefix tree... */
+        if(pt->children[i]){
+            /* Find the character on the board. */
+            for(int x = 0; x < p->dimension; x++){
+                for(int y = 0; y < p->dimension; y++){
+                    /* If the character on the board matches the character in the prefix tree, perform DFS */
+                    if(tolower(p->board[x][y]) == i){
+                        dfsD(p, pt->children[i], s, x, y, word, visited, seenChars);
+                    }
+                }
+            }
+        }
+    }
+
+    /* Sort the words in the solution alphabetically and by length. */
+    qsort(s->words, s->foundWordCount, sizeof(char *), cmpWords);
 
     return s;
 }
