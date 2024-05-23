@@ -70,6 +70,7 @@ struct prefixTree *addUniquesToTree(struct prefixTree *pt, char **words, int wor
         }
 
         isUnique = 1;
+        memset(isCharPresent, 0, sizeof(isCharPresent));
     }
 
     return pt;

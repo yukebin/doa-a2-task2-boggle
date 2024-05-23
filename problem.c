@@ -381,7 +381,7 @@ void dfs(struct problem *p, struct prefixTree *node, struct solution *s,
             /* If the next position is within the board and not visited... */
             if(nx >= 0 && nx < p->dimension && ny >= 0 && ny < p->dimension 
                 && !visited[nx][ny]){
-                char nextChar = tolower(p->board[nx][ny]);
+                unsigned char nextChar = (unsigned char) tolower(p->board[nx][ny]);
                 /* If the next character matches a child in the prefix tree, continue the DFS from there. */
                 if(node->children[nextChar]){
                     dfs(p, node->children[nextChar], s, nx, ny, word, visited);
