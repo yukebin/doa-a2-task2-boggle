@@ -1,0 +1,36 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1.5in]{geometry}
+\usepackage{amsmath}
+\usepackage{titling}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{alphalph}
+\usepackage{perpage}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{nameref}
+\MakePerPage[1]{footnote}
+\renewcommand{\thefootnote}{\alphalph{\value{footnote}}}
+
+\setlength{\droptitle}{-2cm}
+
+\pretitle{\begin{center}\Large}
+\posttitle{\par\end{center}\vskip 0.5em}
+
+\preauthor{\begin{center}\lineskip 2em}
+\postauthor{\par\end{center}}
+
+\predate{\begin{center}\normalsize}
+\postdate{\par\end{center}}
+
+\title{Task 2: Boggle Buddy}
+\author{Kevin Yu \\ The University of Melbourne \\ Design of Algorithms (COMP20007)}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Part C}
+
+By only allowing each letter to appear once in each word (regardless of how many times the letter appears on the board). We can cut down the number of possible words to check in the dictionary. This also results in shorter prefix trees, as we can stop adding letters to the prefix if the letter has already been used in the word. Furthermore, we can implement a mask array of the same size as the ASCII characters, where we set the value to $1$ if the letter has been used in the word, and $0$ otherwise. This allos us to check if a letter has been used in the word in a constant time, eliminating the need to traverse all 8 directions of the board to locate the word.
+\end{document}
